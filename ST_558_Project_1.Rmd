@@ -18,13 +18,15 @@ The below packages are required for connecting to the API, as well as the subseq
 
 1. `httr` - _Retrieves Data from API_
 2. `jsonlite` - _Parses Results from API Query_
-3. `dplyr` - _A part of the `tidyverse` universe of packages, specifically for used manipulating data_
+3. `dplyr` - _A part of the `tidyverse` universe of packages, specifically used for manipulating data_
+4. `ggplot2` - _A part of the `tidyverse` universe of packages, specifically for creating graphs_
 
 ```{r libraries, message=FALSE}
 
 library(httr)
 library(jsonlite)
 library(dplyr)
+library(ggplot2)
 ```
 
 #### __COVID API Function Calls__
@@ -62,7 +64,7 @@ CountryCOVIDFun <- function(country){
   output <- API_JSON$Countries %>% select(ID:TotalRecovered) %>% filter(Country == country)
 }
 
-CountryCVOIDFun_Test <- CountryCOVIDFun("South Africa") 
+CountryCOVIDFun_Test <- CountryCOVIDFun("South Africa") 
 ```
 
 ##### `CountryConfirmFun`
@@ -122,7 +124,7 @@ USConfirmFun_Test <- USConfirmFun(100000)
 
 ##### `USDeathFun`
 
-This function call, calls the details of the first instance, per state, of COVID deaths greater than (or equal to) a user-specified # of deaths. Details include the State Name, Latitude & Longitude of the State, Total Number of Recovers, and the Total Number of Deaths and the date the # of deaths first hit >= the User-Specified value.
+This function call, calls the details, per state, of each day COVID deaths greater than (or equal to) a user-specified # of deaths. Details include the State Name, Latitude & Longitude of the State, Total Number of Recovers, and the Total Number of Deaths and each day the # of deaths hit >= the User-Specified value.
 
 ```{r function6}
 USDeathFun <-function(x){
@@ -130,11 +132,90 @@ USDeathFun <-function(x){
   API_content <- content(API_init, as = "text")
   API_JSON <- fromJSON(API_content)
   output <- API_JSON %>% filter(Deaths >= x) %>% arrange(Province, Deaths)
-  output_subset <- output[match(unique(output$Province), output$Province),]
-  return(output_subset)
+  return(output)
 }
 
 USDeathFun_Test <- USDeathFun(5000)
 ```
 
 #### __Exploratory Data Analysis__
+
+Now that we have created multiple function calls, to call different elements / data sets, it is time to perform some exploratory data analysis.
+
+Firstly, I want to look at the Rate of Active Cases in North Carolina over time to see how (or if) it is changing. Using the `USCOVIDFun` Function Call, this is going to require me to create 2 new variables: 
+
+1. Numeric date variable 
+2. Rate of Active Cases out of the Total Number of Confirmed Cases
+
+```{r new_variables}
+
+# Create an Output Object of COVID Cases in NC.
+NCCovidCases <- USCOVIDFun("North Carolina")
+
+# Create First New Variable that Takes the Numeric Version of the Reported Date
+NCCovidCases <- mutate(NCCovidCases, Date_Num = as.Date(strtrim(NCCovidCases$Date, 10)))
+
+# Create Second New Variable that Reports the Rate of Active Cases
+NCCovidCases <- mutate(NCCovidCases, ActiveRate = Active/Confirmed)
+```
+
+Now that we have created the necessary variables, we can plot these two variables against each other to see the Rate of Active Cases over time.
+
+Looking at the visual below, we can see that (although small) there has been an increase in the rate of Active Cases in the past few months.
+
+```{r graph1}
+
+g1 <- ggplot(NCCovidCases, aes(x=Date_Num, y=ActiveRate)) +
+  geom_line() + xlab("Date (2021)") +ylab("Rate of Active Cases")
+
+g1
+
+```
+
+Next, let's use the `USDeathFun` Function Call to pull in data about the # of Deaths Occurring per State in the United States. 
+
+I have created a graphic using this data to show the frequency, with which states have a Daily Death Count >= 55,000.
+
+_Note: Since this Death Count Data is cumulative, once a state hits a Death Count of X, it will never drop back down. Please keep this caveat in mind when reviewing this graph._
+
+```{r graph2}
+
+USDeaths <- USDeathFun(55000)
+
+g2 <- ggplot(USDeaths, aes(x=Province)) +
+  geom_bar()+labs(x = "State", y = "# of Days Death > 55,000")
+
+g2
+
+```
+
+Next, let's use the `CountryConfirmFun` Function Call to pull in data about COVID Cases in Australia, when more than 10,000 Cases have Been Confirmed. I have created a graphic using this data to show the frequency of the Death Count, under these aforementioned conditions.
+
+_Note: Since this Confirmed Cases Count Data is cumulative, once a state hits a Confirmed Cases Count of X, it will never drop back down. Please keep this caveat in mind when reviewing this graph._
+
+```{r graph3}
+
+AUSConfirms <- CountryConfirmFun("australia", 2500)
+
+g3 <- ggplot(AUSConfirms, aes(x=Deaths)) +
+  geom_histogram(binwidth=50)+labs(x = "# of Deaths", y = "# of Days Death Count = X")
+
+g3
+
+```
+
+The following graphic dives a little bit deeper into the data we are exploring in Graph #3 above. This breaks Boxplot breaks down the # of Deaths by Province in Australia.
+
+```{r graph4}
+g4 <- ggplot(AUSConfirms, aes(x=Province, y=Deaths))+
+  geom_boxplot()+labs(x = "Province", y = "# Deaths")
+
+g4
+```
+
+```{r graph5}
+g5 <- ggplot(AUSConfirms, aes(x=Active, y=Deaths))+
+  geom_point() + facet_wrap(~ Province)
+
+g5
+```
