@@ -1,40 +1,32 @@
-ST 558 Project 1
-================
-Rebecca Voelker
-10/05/2021
+---
+title: "ST 558 Project 1"
+author: "Rebecca Voelker"
+date: "10/05/2021"
+---
 
-## **Render Code (for Reference ONLY)**
+## __Render Code (for Reference ONLY)__
 
-``` r
-rmarkdown::render("input_test.Rmd", "github_document","README.md")
+```{r, Render, eval=FALSE}
+rmarkdown::render("ST_558_Project_1.Rmd", "github_document","README.md")
 ```
 
-## **Packages Required for ST 558 Project 1**
+## __Packages Required for ST 558 Project 1__
 
-1.  httr - *Retrieves Data from API*
-2.  jsonlite - *Parses Results from API Query*
-3.  dplyr -
+1. httr - _Retrieves Data from API_
+2. jsonlite - _Parses Results from API Query_
+3. dplyr -
 
-``` r
+```{r libraries}
+
 library(httr)
 library(jsonlite)
 library(dplyr)
 ```
 
-    ## 
-    ## Attaching package: 'dplyr'
+## This function call, calls in a list of a user-specified country and it's  slug-code
 
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     filter, lag
+```{r function1}
 
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     intersect, setdiff, setequal, union
-
-## This function call, calls in a list of a user-specified country and it’s slug-code
-
-``` r
 CountryFun <- function(country){
   base <- "https://api.covid19api.com/live/country/"
   endpoint <- country
@@ -48,7 +40,7 @@ Country <- CountryFun("australia")
 
 ## This function will call the details of COVID cases in in particular country
 
-``` r
+```{r function2}
 funCountry <- function(country){
   API_init <- GET("https://api.covid19api.com/summary")
   API_content <- content(API_init, as = "text")
@@ -59,9 +51,9 @@ funCountry <- function(country){
 SATest <- funCountry("South Africa") 
 ```
 
-## This function will call the details of Confirmed Cases that are &gt;= X (User-Defined) \# of Cases in Australia
+## This function will call the details of Confirmed Cases that are >= X (User-Defined) # of Cases in Australia 
 
-``` r
+```{r function3}
 funAUS_Confirm <- function(x){
   API_init <- GET("https://api.covid19api.com/live/country/australia")
   API_content <- content(API_init, as = "text")
@@ -71,11 +63,13 @@ funAUS_Confirm <- function(x){
 }
 
 AUSConfirmTest <- funAUS_Confirm(50000)
+
 ```
 
 ## This function will call the details of COVID cases in a particular state in the United States
 
-``` r
+```{r function4}
+
 funState <- function(province){
   API_init <- GET("https://api.covid19api.com/live/country/USA")
   API_content <- content(API_init, as = "text")
@@ -87,9 +81,9 @@ funState <- function(province){
 WISTest <- funState("Wisconsin")
 ```
 
-## This function will call the details of the first instance of COVID cases &gt;= X (User-Defined) \# of Confirmed Cases in any state in the United States
+## This function will call the details of the first instance of COVID cases >= X (User-Defined) # of Confirmed Cases in any state in the United States
 
-``` r
+```{r function5}
 funUS_Confirm <- function(x){
   API_init <- GET("https://api.covid19api.com/live/country/USA")
   API_content <- content(API_init, as = "text")
@@ -102,9 +96,9 @@ funUS_Confirm <- function(x){
 ConfirmTest <- funUS_Confirm(100000)
 ```
 
-## This function will call the details of the first instance of Deaths &gt;= X (User-Defined) \# in any state in the United States
+## This function will call the details of the first instance of Deaths >= X (User-Defined) # in any state in the United States
 
-``` r
+```{r function6}
 funUS_Death <-function(x){
   API_init <- GET("https://api.covid19api.com/live/country/USA")
   API_content <- content(API_init, as = "text")
