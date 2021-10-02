@@ -50,39 +50,49 @@ CountryFun <- function(country){
 CountryFun_Test <- CountryFun("australia")
 ```
 
-## This function will call the details of COVID cases in in particular country
+##### `CountryCOVIDFun`
+
+This function call, calls in the details of COVID cases in a user-specified country. Details include the Total Number of Confirmed COVID Cases, the Total Number of Recoveries, and the Total Number of Deaths. 
 
 ```{r function2}
-funCountry <- function(country){
+CountryCOVIDFun <- function(country){
   API_init <- GET("https://api.covid19api.com/summary")
   API_content <- content(API_init, as = "text")
   API_JSON <- fromJSON(API_content)
   output <- API_JSON$Countries %>% select(ID:TotalRecovered) %>% filter(Country == country)
 }
 
-SATest <- funCountry("South Africa") 
+CountryCVOIDFun_Test <- CountryCOVIDFun("South Africa") 
 ```
 
-## This function will call the details of Confirmed Cases that are >= X (User-Defined) # of Cases in Australia 
+##### `CountryConfirmFun`
 
+This function call, calls in the details of COVID cases in a user-specified country, *by province/state*. Details include the Total Number of Confirmed COVID Cases, the Total Number of Recoveries, and the Total Number of Deaths.
+ User can also specify if they would like to look at the data, as-of a specific # of Confirmed Cases.
+ 
 ```{r function3}
-funAUS_Confirm <- function(x){
-  API_init <- GET("https://api.covid19api.com/live/country/australia")
+CountryConfirmFun <- function(x, y){
+  base <- "https://api.covid19api.com/live/country/"
+  endpoint <- x
+  paste_url <- paste(base, endpoint, sep = "")
+  API_init <- GET(paste_url)
   API_content <- content(API_init, as = "text")
   API_JSON <- fromJSON(API_content)
-  output <- API_JSON %>% filter(Confirmed >= x)
+  output <- API_JSON %>% filter(Confirmed >= y)
   return(output)
 }
 
-AUSConfirmTest <- funAUS_Confirm(50000)
+CountryConfirmFun_Test <- CountryConfirmFun("australia", 5000)
 
 ```
 
-## This function will call the details of COVID cases in a particular state in the United States
+##### `USCOVIDFun`
+
+This function call, calls the details of COVID cases in a particular state in the United States. Details include the Total Number of Confirmed COVID Cases, the Total Number of Recoveries, and the Total Number of Deaths.
 
 ```{r function4}
 
-funState <- function(province){
+USCOVIDFun <- function(province){
   API_init <- GET("https://api.covid19api.com/live/country/USA")
   API_content <- content(API_init, as = "text")
   API_JSON <- fromJSON(API_content)
@@ -90,13 +100,15 @@ funState <- function(province){
   return(output)
 }
 
-WISTest <- funState("Wisconsin")
+USCOVIDFun_Test <- USCOVIDFun("Wisconsin")
 ```
 
-## This function will call the details of the first instance of COVID cases >= X (User-Defined) # of Confirmed Cases in any state in the United States
+##### `USConfirmFun`
+
+This function call, calls the details of the first instance, per state, of COVID cases greater than (or equal to) a user-specified # of cases. Details include the State Name, Latitude & Longitude of the State, Total Number of Recovers, and the Total Number of Deaths and the date the # of Confirmed Cases first hit >= the User-Specified value.
 
 ```{r function5}
-funUS_Confirm <- function(x){
+USConfirmFun <- function(x){
   API_init <- GET("https://api.covid19api.com/live/country/USA")
   API_content <- content(API_init, as = "text")
   API_JSON <- fromJSON(API_content)
@@ -105,13 +117,15 @@ funUS_Confirm <- function(x){
   return(output_subset)
 }
 
-ConfirmTest <- funUS_Confirm(100000)
+USConfirmFun_Test <- USConfirmFun(100000)
 ```
 
-## This function will call the details of the first instance of Deaths >= X (User-Defined) # in any state in the United States
+##### `USDeathFun`
+
+This function call, calls the details of the first instance, per state, of COVID deaths greater than (or equal to) a user-specified # of deaths. Details include the State Name, Latitude & Longitude of the State, Total Number of Recovers, and the Total Number of Deaths and the date the # of deaths first hit >= the User-Specified value.
 
 ```{r function6}
-funUS_Death <-function(x){
+USDeathFun <-function(x){
   API_init <- GET("https://api.covid19api.com/live/country/USA")
   API_content <- content(API_init, as = "text")
   API_JSON <- fromJSON(API_content)
@@ -120,5 +134,7 @@ funUS_Death <-function(x){
   return(output_subset)
 }
 
-funUS_DeathTest <- funUS_Death(5000)
+USDeathFun_Test <- USDeathFun(5000)
 ```
+
+#### __Exploratory Data Analysis__
