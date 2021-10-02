@@ -19,6 +19,7 @@ The below packages are required for connecting to the API, as well as the subseq
 1. `httr` - _Retrieves Data from API_
 2. `jsonlite` - _Parses Results from API Query_
 3. `dplyr` - _A part of the `tidyverse` universe of packages, specifically used for manipulating data_
+4. `tidyr` - 
 4. `ggplot2` - _A part of the `tidyverse` universe of packages, specifically for creating graphs_
 
 ```{r libraries, message=FALSE}
@@ -26,6 +27,7 @@ The below packages are required for connecting to the API, as well as the subseq
 library(httr)
 library(jsonlite)
 library(dplyr)
+library(tidyr)
 library(ggplot2)
 ```
 
@@ -142,24 +144,24 @@ USDeathFun_Test <- USDeathFun(5000)
 
 Now that we have created multiple function calls, to call different elements / data sets, it is time to perform some exploratory data analysis.
 
-Firstly, I want to look at the Rate of Active Cases in North Carolina over time to see how (or if) it is changing. Using the `USCOVIDFun` Function Call, this is going to require me to create 2 new variables: 
+Firstly, I want to look at the Rate of Active Cases in North Carolina over time to see how (or if) it is changing. Using the `USCOVIDFun` Function Call, this is going to require me to create a new variable: 
 
-1. Numeric date variable 
-2. Rate of Active Cases out of the Total Number of Confirmed Cases
+1. Rate of Active Cases out of the Total Number of Confirmed Cases
 
-```{r new_variables}
+```{r new_var1, warning=FALSE}
 
 # Create an Output Object of COVID Cases in NC.
 NCCovidCases <- USCOVIDFun("North Carolina")
 
-# Create First New Variable that Takes the Numeric Version of the Reported Date
+# Create First New Variable that Reports the Rate of Active Cases
+NCCovidCases <- mutate(NCCovidCases, ActiveRate = Active/Confirmed)
+
+# Convert Date Variable to a Date Format
 NCCovidCases <- mutate(NCCovidCases, Date_Num = as.Date(strtrim(NCCovidCases$Date, 10)))
 
-# Create Second New Variable that Reports the Rate of Active Cases
-NCCovidCases <- mutate(NCCovidCases, ActiveRate = Active/Confirmed)
 ```
 
-Now that we have created the necessary variables, we can plot these two variables against each other to see the Rate of Active Cases over time.
+Now that we have created the necessary variable, and converted 'Date', we can plot these two variables against each other to see the Rate of Active Cases over time.
 
 Looking at the visual below, we can see that (although small) there has been an increase in the rate of Active Cases in the past few months.
 
@@ -172,50 +174,102 @@ g1
 
 ```
 
-Next, let's use the `USDeathFun` Function Call to pull in data about the # of Deaths Occurring per State in the United States. 
+Now, using this same data set, I want to look at the # of deaths per month. This will require me to create a new variable, 'Month' in order to group the observations. I am also going to filter this data so that I am only looking at the past 3 *full* months of data.
 
-I have created a graphic using this data to show the frequency, with which states have a Daily Death Count >= 55,000.
+```{r new_var2, warning=FALSE}
 
-_Note: Since this Death Count Data is cumulative, once a state hits a Death Count of X, it will never drop back down. Please keep this caveat in mind when reviewing this graph._
+# Create a 'Helper' Column to Uniquely Identify Months
+NCCovidCases <- NCCovidCases %>% separate(Date_Num, c(NA, "Month_Num"), remove=FALSE)
+
+# Create Second New Variable that Groups by Month
+NCCovidCases <- NCCovidCases %>% mutate(Month = if_else(Month_Num == "06", "June",
+  if_else(Month_Num == "07", "July",
+    if_else(Month_Num == "08", "August",
+      if_else(Month_Num == "09", "September", "October")))))
+
+#Create a Subset that Looks Only at Full Months of Data (excl. June & Oct.)
+target <- c("July", "August", "September")
+NCCovidCases <- NCCovidCases %>% filter(Month %in% target)
+
+#Reorder Months to Appear in Sequential Order Box Plot
+NCCovidCases$Month <- factor(NCCovidCases$Month, levels=c("July", "August", "September"))
+
+```
+
+Now that we have created the Month variable, we can create box-plots, by month, showing summary statistics for the # of deaths that month.
+
+_Reminder: Deaths is cumulative, over time. Please keep this caveat in mind when reviewing this graph._
+
+Looking at the visual below, we can draw a few conclusions. 
+Firstly, the number of deaths goes up each month, which is consistent with the understanding of the caveat above (i.e. this is cumulative data). 
+
+Secondly, we can see that the September had the most deaths because it had the largest difference it's maximum value and it's minimum value.
 
 ```{r graph2}
 
-USDeaths <- USDeathFun(55000)
-
-g2 <- ggplot(USDeaths, aes(x=Province)) +
-  geom_bar()+labs(x = "State", y = "# of Days Death > 55,000")
+g2 <- ggplot(NCCovidCases, aes(x=Month, y=Deaths))+
+  geom_boxplot()+labs(x = "Month", y = "Cumulative Deaths")
 
 g2
+```
+
+It might help to look at a numerical summary associated with these values to better understand.
+
+Looking at this data, we can see take the Minimum # of Deaths for each Month and subtract it from the Maximum # of Deaths for that same Month. This will give us the # of Deaths for that Month. Consistent with our Box Plots, we can see that September had over 2 times the number of deaths as compared August and nearly 10 times the number of deaths as compared to July.
+
+```{r numerical summary, warning=FALSE}
+
+#Generate a Numerical Summary that Shows the # of Deaths per Month in NC. 
+
+NCCovidCases %>% group_by(Month) %>% summarise(MonthlyDeaths = max(Deaths)-min(Deaths)) 
 
 ```
 
-Next, let's use the `CountryConfirmFun` Function Call to pull in data about COVID Cases in Australia, when more than 10,000 Cases have Been Confirmed. I have created a graphic using this data to show the frequency of the Death Count, under these aforementioned conditions.
+Let's move outside of the United State now and look at some COVID data from abroad, specifically Australia. We will use the `CountryConfirmFun` Function Call to pull in data about COVID Cases in Australia.
 
-_Note: Since this Confirmed Cases Count Data is cumulative, once a state hits a Confirmed Cases Count of X, it will never drop back down. Please keep this caveat in mind when reviewing this graph._
+Here I am looking at the Number of Active Cases as Compared to the # of Deaths, by Province. We can see that these two variables look to be positively correlated based on the patterns in the scatter plots. As the number of Active Cases goes up, so does the number of Deaths. 
 
 ```{r graph3}
 
-AUSConfirms <- CountryConfirmFun("australia", 2500)
+AUSConfirms <- CountryConfirmFun("australia", 0)
 
-g3 <- ggplot(AUSConfirms, aes(x=Deaths)) +
-  geom_histogram(binwidth=50)+labs(x = "# of Deaths", y = "# of Days Death Count = X")
-
-g3
-
-```
-
-The following graphic dives a little bit deeper into the data we are exploring in Graph #3 above. This breaks Boxplot breaks down the # of Deaths by Province in Australia.
-
-```{r graph4}
-g4 <- ggplot(AUSConfirms, aes(x=Province, y=Deaths))+
-  geom_boxplot()+labs(x = "Province", y = "# Deaths")
-
-g4
-```
-
-```{r graph5}
 g5 <- ggplot(AUSConfirms, aes(x=Active, y=Deaths))+
   geom_point() + facet_wrap(~ Province)
 
 g5
 ```
+
+Let's drill down into the Provinces where we have seen the most Confirmed Cases - New South Wales and Victoria. The below histograms show us that # of days that a Death Count was a certain value in New South Wales and Victoria, respectively.
+
+```{r graph4}
+
+#Create a Subset that Looks Only at New South Wales and Victoria
+target <- c("New South Wales", "Victoria")
+AUSConfirms <- AUSConfirms %>% filter(Province %in% target)
+
+g4 <- ggplot(AUSConfirms, aes(x=Deaths)) +
+  geom_histogram()+facet_grid(~Province)
+
+g4
+
+```
+Looking at these two histograms, we can see a pretty distinct grouping of the Death Counts, by Province.It might help to look at a Contingency Table associated with these values to better understand.
+
+I created a variable that buckets the # of Deaths into __Low__ (< 250), __Medium__ (>= 250 and < 500), and __High__ (>=500). Remember that the Death Variable is cumulative. Therefore we can read the Contingency Table below, as follows: 
+
+There were 83 consecutive days (beginning June 25th, 2021) where the Death Count remained below 250 people in New South Wales. After 83 days, the Death Count topped 250 people for 16 days (Up To Present-Day). The Death Count in Victoria has been greater than 500 people (Likely ~800 people, looking at the above histogram) since at least June 25th, 2021.  
+
+```{r contingency table}
+
+# Create Third New Variable that Groups Death Count
+AUSConfirms <- AUSConfirms %>% mutate(DeathBucket = if_else(Deaths >= 500, "High",
+  if_else(Deaths >= 250, "Medium", "Low")))
+
+#Reorder Buckets to Appear in Sequential Order in Contingency Table
+AUSConfirms$DeathBucket <- factor(AUSConfirms$DeathBucket, levels=c("Low", "Medium", "High"))
+
+table(AUSConfirms$Province, AUSConfirms$DeathBucket)
+
+```
+
+
