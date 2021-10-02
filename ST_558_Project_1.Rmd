@@ -4,26 +4,38 @@ author: "Rebecca Voelker"
 date: "10/05/2021"
 ---
 
-## __Render Code (for Reference ONLY)__
+This document will walk the reader through the process of connecting to & collecting data from the COVID API within R.  
+
+##### __Render Code (for Reference ONLY)__
 
 ```{r, Render, eval=FALSE}
 rmarkdown::render("ST_558_Project_1.Rmd", "github_document","README.md")
 ```
 
-## __Packages Required for ST 558 Project 1__
+#### __Packages Required for Vignette__
 
-1. httr - _Retrieves Data from API_
-2. jsonlite - _Parses Results from API Query_
-3. dplyr -
+The below packages are required for connecting to the API, as well as the subsequent data analysis and exploration performed on the data retrieved from the API.  
 
-```{r libraries}
+1. `httr` - _Retrieves Data from API_
+2. `jsonlite` - _Parses Results from API Query_
+3. `dplyr` - _A part of the `tidyverse` universe of packages, specifically for used manipulating data_
+
+```{r libraries, message=FALSE}
 
 library(httr)
 library(jsonlite)
 library(dplyr)
 ```
 
-## This function call, calls in a list of a user-specified country and it's  slug-code
+#### __COVID API Function Calls__
+
+Below are 6 functions I have created to call various endpoints of the [COVID-19 API Data](https://documenter.getpostman.com/view/10808728/SzS8rjbc#e831c268-9da1-4d86-8b5a-8d7f61910af8).
+
+Note that for each function created, I have performed a test of the functional call, outputting the object as *functionname*_Test. 
+
+##### `CountryFun`
+
+This function call, calls in a user-specified country and it's  slug-code
 
 ```{r function1}
 
@@ -35,7 +47,7 @@ CountryFun <- function(country){
   return(as_tibble(outputAPI))
 }
 
-Country <- CountryFun("australia")
+CountryFun_Test <- CountryFun("australia")
 ```
 
 ## This function will call the details of COVID cases in in particular country
