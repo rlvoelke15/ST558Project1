@@ -1,6 +1,10 @@
 ---
 title: "ST 558 Blog Post Project 1"
 author: "Rebecca Voelker"
+
+```{r renders, echo = FALSE, eval = FALSE}
+rmarkdown::render("C:/Users/Rebecca/OneDrive/Desktop/ST 558/Repos/rlvoelke15.github.io/_Rmd/2021-9-14-Second-Blog-Post.rmd", output_format = "github_document", output_dir = "C:/Users/Rebecca/OneDrive/Desktop/ST 558/Repos/rlvoelke15.github.io/_posts", output_options = list(html_preview = FALSE))
+```
 ---
 
 ## Prompt
