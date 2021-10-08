@@ -4,7 +4,7 @@ author: "Rebecca Voelker"
 date: "10/05/2021"
 ---
 
-This document will walk the reader through the process of connecting to & collecting data from the COVID API within R.  
+This document will walk the reader through the process of connecting to & collecting data from the COVID API within R.
 
 ## __Render Code (for Reference ONLY)__
 
