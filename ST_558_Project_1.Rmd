@@ -14,7 +14,7 @@ rmarkdown::render("ST_558_Project_1.Rmd", "github_document","README.md")
 
 ## __Packages Required for Vignette__
 
-The below packages are required for connecting to the API, as well as the subsequent data analysis and exploration performed on the data retrieved from the API.  
+The below packages are required for connecting to the API, as well as the subsequent data analysis and exploration performed on the data retrieved from the API.
 
 1. `httr` - _Retrieves Data from an API_
 2. `jsonlite` - _Parses Results from an API Query_
